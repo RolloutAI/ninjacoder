@@ -1,0 +1,462 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 220, 223, 228;
+  --background-rgb: 0, 0, 0;
+  --sidebar-rgb: 17, 17, 17;
+  --border-rgb: 34, 34, 34;
+  --active-item-rgb: 51, 51, 51;
+  --highlight-rgb: 140, 199, 0;
+  --selection-color: #dff000;
+  --folder-color: #e8c07d;
+  --file-color: #61afef;
+  
+  /* Font sizes */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  
+  /* Line heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Mono';
+  src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/SFMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Mono';
+  src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/SFMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: 'SF Pro Display', var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-normal);
+}
+
+.font-mono {
+  font-family: 'SF Mono', var(--font-jetbrains-mono), SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-feature-settings: 'liga' 0;
+  letter-spacing: -0.025em;
+}
+
+.code-font {
+  font-family: 'SF Mono', var(--font-jetbrains-mono), SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-feature-settings: 'liga' 0;
+  letter-spacing: -0.025em;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--background-rgb));
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+  border: 1px solid rgb(var(--background-rgb));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Chat sidebar scrollbar */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: #111;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Animation for chat messages */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-animation {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Explorer Styles */
+.explorer-item {
+  position: relative;
+  margin-bottom: 1px;
+}
+
+.explorer-folder {
+  display: flex;
+  align-items: center;
+  padding: 3px 6px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+  user-select: none;
+  margin-bottom: 1px;
+}
+
+.explorer-folder:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.explorer-folder.active {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.explorer-file {
+  display: flex;
+  align-items: center;
+  padding: 3px 6px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+  user-select: none;
+  margin-bottom: 1px;
+}
+
+.explorer-file:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.explorer-file.active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.explorer-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.explorer-label {
+  font-size: 12px;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'SF Pro Display', var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.explorer-children {
+  max-height: 0;
+  overflow: hidden;
+  padding-left: 10px;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  margin-top: 1px;
+}
+
+.explorer-children.expanded {
+  max-height: 1000px;
+  opacity: 1;
+  margin-top: 1px;
+  margin-bottom: 2px;
+}
+
+.file-indicator {
+  width: 2px;
+  height: 14px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.file-indicator.active {
+  background-color: var(--highlight-rgb);
+}
+
+/* Folder toggle animation */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(90deg); }
+}
+
+.animate-rotate {
+  animation: rotate 0.3s ease-out forwards;
+}
+
+/* File click animation */
+@keyframes fileClick {
+  0% { background-color: rgba(140, 199, 0, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.file-click-animation {
+  animation: fileClick 0.3s ease-out;
+}
+
+/* Custom selection color */
+.custom-selection::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.custom-selection *::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+/* For Firefox */
+.custom-selection::-moz-selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.custom-selection *::-moz-selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-keyword {
+  color: #c678dd;
+}
+
+.syntax-keyword::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-type {
+  color: #e5c07b;
+}
+
+.syntax-type::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-decorator {
+  color: #e06c75;
+}
+
+.syntax-decorator::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-string {
+  color: #98c379;
+}
+
+.syntax-string::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-number {
+  color: #d19a66;
+}
+
+.syntax-number::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-component {
+  color: #61afef;
+}
+
+.syntax-component::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-method {
+  color: #56b6c2;
+}
+
+.syntax-method::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-property {
+  color: #56b6c2;
+}
+
+.syntax-property::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.syntax-comment {
+  color: #7f848e;
+  font-style: italic;
+}
+
+.syntax-comment::selection {
+  background-color: var(--selection-color) !important;
+  color: #000 !important;
+}
+
+.line-highlight {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tab-active {
+  background-color: rgb(var(--background-rgb));
+  border-top: 2px solid rgb(var(--highlight-rgb));
+}
+
+.tab-inactive {
+  background-color: rgb(var(--sidebar-rgb));
+  border-top: 2px solid transparent;
+}
+
+.file-active {
+  background-color: rgba(140, 199, 0, 0.2);
+}
+
+.file-icon-active {
+  background-color: rgb(var(--highlight-rgb));
+}
+
+.line-number {
+  display: inline-block;
+  width: 100%;
+  text-align: right;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', var(--font-jetbrains-mono), SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  padding-right: 8px;
+}
+
+.editor-line {
+  display: flex;
+  height: 18px;
+  line-height: 18px;
+  white-space: pre;
+  position: relative;
+  font-family: 'SF Mono', var(--font-jetbrains-mono), SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+}
+
+.editor-content {
+  white-space: pre;
+  padding-left: 12px;
+  font-family: 'SF Mono', var(--font-jetbrains-mono), SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .editor-line {
+    height: 18px;
+    line-height: 18px;
+  }
+  
+  .line-number {
+    font-size: 0.75rem;
+  }
+  
+  .editor-content {
+    font-size: 0.75rem;
+    padding-left: 8px;
+  }
+}
+
+/* Touch-friendly targets */
+@media (pointer: coarse) {
+  .editor-line {
+    min-height: 24px;
+    line-height: 24px;
+  }
+}
+
+/* Spotlight search animations */
+@keyframes spotlightFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.spotlight-animation {
+  animation: spotlightFadeIn 0.2s ease-out forwards;
+}
+
+/* Improved scrollbar for spotlight search */
+.spotlight-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.spotlight-scrollbar::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.spotlight-scrollbar::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+.spotlight-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
