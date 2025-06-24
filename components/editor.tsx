@@ -10,7 +10,30 @@ interface EditorProps {
 }
 
 export default function Editor({ files, activeFile, setActiveFile, openFiles, onCloseFile }: EditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null);
+  const [content, setContent] = useState(files[activeFile] || '');
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  // Update content when active file changes
+  useEffect(() => {
+    setContent(files[activeFile] || '');
+  }, [activeFile, files]);
+
+  // Sync scroll between textarea and highlighted view
+  useEffect(() => {
+    const textarea = editorRef.current;
+    const highlight = highlightRef.current;
+    
+    if (!textarea || !highlight) return;
+    
+    const syncScroll = () => {
+      highlight.scrollTop = textarea.scrollTop;
+      highlight.scrollLeft = textarea.scrollLeft;
+    };
+    
+    textarea.addEventListener('scroll', syncScroll);
+    return () => textarea.removeEventListener('scroll', syncScroll);
+  }, []);
 
   const handleTabClick = (file: string) => {
     setActiveFile(file);
@@ -20,6 +43,30 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
   const handleTabClose = (e: React.MouseEvent, file: string) => {
     e.stopPropagation(); // Prevent tab selection when closing
     onCloseFile(file);
+  };
+
+  // Handle content change
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    // Here you would typically update the files state in the parent component
+  };
+
+  // Handle tab key
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = e.currentTarget.selectionStart;
+      const end = e.currentTarget.selectionEnd;
+      const newContent = content.substring(0, start) + '  ' + content.substring(end);
+      setContent(newContent);
+      
+      // Move cursor after the inserted tab
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.selectionStart = editorRef.current.selectionEnd = start + 2;
+        }
+      }, 0);
+    }
   };
 
   // Get file language based on extension
@@ -67,36 +114,6 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
           /(=)(".*?")/g,
           '$1<span class="text-[#98c379]">$2</span>'
         );
-        
-        // HTML comments
-        highlightedLine = highlightedLine.replace(
-          /<!--(.*?)-->/g,
-          '<span class="text-[#7f848e] italic">&lt;!--$1--&gt;</span>'
-        );
-      } else if (language === 'css') {
-        // CSS selectors
-        highlightedLine = highlightedLine.replace(
-          /([\.\#]?[\w\-]+)(\s*\{)/g,
-          '<span class="text-[#e06c75]">$1</span>$2'
-        );
-        
-        // CSS properties
-        highlightedLine = highlightedLine.replace(
-          /(\s+)([\w\-]+)(\s*:)/g,
-          '$1<span class="text-[#56b6c2]">$2</span>$3'
-        );
-        
-        // CSS values
-        highlightedLine = highlightedLine.replace(
-          /(:)(\s*)([\w\-\#\.]+)/g,
-          '$1$2<span class="text-[#98c379]">$3</span>'
-        );
-        
-        // CSS comments
-        highlightedLine = highlightedLine.replace(
-          /(\/\*.*?\*\/)/g,
-          '<span class="text-[#7f848e] italic">$1</span>'
-        );
       } else if (language === 'javascript') {
         // JavaScript keywords
         highlightedLine = highlightedLine.replace(
@@ -116,75 +133,15 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
           '<span class="text-[#d19a66]">$1</span>'
         );
         
-        // JavaScript comments
-        highlightedLine = highlightedLine.replace(
-          /(\/\/.*$|\/\*.*?\*\/)/g,
-          '<span class="text-[#7f848e] italic">$1</span>'
-        );
-        
         // JavaScript functions
         highlightedLine = highlightedLine.replace(
           /\b([\w]+)(?=\s*\()/g,
           '<span class="text-[#61afef]">$1</span>'
         );
-      } else if (language === 'json') {
-        // JSON keys
-        highlightedLine = highlightedLine.replace(
-          /("[\w\-]+")(\s*:)/g,
-          '<span class="text-[#e06c75]">$1</span>$2'
-        );
-        
-        // JSON strings
-        highlightedLine = highlightedLine.replace(
-          /(:)(\s*)(".*?")/g,
-          '$1$2<span class="text-[#98c379]">$3</span>'
-        );
-        
-        // JSON numbers
-        highlightedLine = highlightedLine.replace(
-          /\b(\d+(\.\d+)?)\b/g,
-          '<span class="text-[#d19a66]">$1</span>'
-        );
-        
-        // JSON booleans and null
-        highlightedLine = highlightedLine.replace(
-          /\b(true|false|null)\b/g,
-          '<span class="text-[#c678dd]">$1</span>'
-        );
-      } else if (language === 'markdown') {
-        // Markdown headers
-        highlightedLine = highlightedLine.replace(
-          /^(#{1,6}\s+)(.+)$/g,
-          '<span class="text-[#e06c75]">$1</span><span class="text-[#61afef] font-bold">$2</span>'
-        );
-        
-        // Markdown emphasis
-        highlightedLine = highlightedLine.replace(
-          /(\*\*|__)(.+?)(\*\*|__)/g,
-          '<span class="text-[#98c379] font-bold">$1$2$3</span>'
-        );
-        
-        // Markdown italic
-        highlightedLine = highlightedLine.replace(
-          /(\*|_)(.+?)(\*|_)/g,
-          '<span class="text-[#98c379] italic">$1$2$3</span>'
-        );
-        
-        // Markdown code
-        highlightedLine = highlightedLine.replace(
-          /(`+)(.+?)(`+)/g,
-          '<span class="text-[#d19a66]">$1$2$3</span>'
-        );
-        
-        // Markdown links
-        highlightedLine = highlightedLine.replace(
-          /(\[)(.+?)(\])(\(.+?\))/g,
-          '<span class="text-[#56b6c2]">$1$2$3$4</span>'
-        );
       }
       
       return (
-        <div key={lineIndex} className="editor-line">
+        <div key={lineIndex} className="editor-line whitespace-pre">
           <div dangerouslySetInnerHTML={{ __html: highlightedLine || '&nbsp;' }} />
         </div>
       );
@@ -230,12 +187,12 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
       
       {/* Editor content */}
       <div className="flex-1 overflow-auto custom-selection hide-scrollbar">
-        <div className="flex min-w-full">
+        <div className="flex min-w-full h-full">
           {/* Line numbers */}
           <div className="bg-[#111] text-gray-500 py-2 pr-4 pl-4 select-none w-12 flex-shrink-0">
-            {files[activeFile].split('\n').map((_, index) => (
+            {content.split('\n').map((_, index) => (
               <div key={index} className="editor-line">
-                <span className="line-number">
+                <span className="line-number text-xs">
                   {index + 1}
                 </span>
               </div>
@@ -243,11 +200,31 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
           </div>
           
           {/* Code content */}
-          <div 
-            ref={editorRef}
-            className="py-2 code-font overflow-x-auto flex-1 custom-selection hide-scrollbar"
-          >
-            {highlightCode(files[activeFile], getFileLanguage(activeFile))}
+          <div className="py-2 code-font overflow-x-auto flex-1 custom-selection hide-scrollbar relative">
+            {/* Syntax highlighted code */}
+            <div 
+              ref={highlightRef}
+              className="absolute top-0 left-0 w-full h-full pointer-events-none text-xs p-2"
+              aria-hidden="true"
+            >
+              {highlightCode(content, getFileLanguage(activeFile))}
+            </div>
+
+            {/* Editable textarea */}
+            <textarea
+              ref={editorRef}
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              className="absolute top-0 left-0 w-full h-full bg-transparent text-transparent caret-white font-mono text-xs p-2 resize-none outline-none border-none"
+              spellCheck="false"
+              autoCapitalize="off"
+              autoComplete="off"
+              autoCorrect="off"
+              data-gramm="false"
+              data-gramm_editor="false"
+              data-enable-grammarly="false"
+            />
           </div>
         </div>
       </div>

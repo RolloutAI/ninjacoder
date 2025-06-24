@@ -102,14 +102,14 @@ export function VercelV0Chat() {
     };
 
     return (
-        <div className="flex flex-col items-center w-full max-w-4xl mx-auto p-4 space-y-8">
-            <h1 className="text-4xl font-bold text-black dark:text-white">
+        <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto p-8 space-y-8">
+            <h1 className="text-4xl font-bold text-center text-black dark:text-white">
                 What can I help you ship?
             </h1>
 
             <div className="w-full">
                 <div className="relative bg-neutral-900 rounded-xl border border-neutral-800">
-                    <div className="overflow-y-auto">
+                    <div className="overflow-y-auto rounded-xl">
                         <Textarea
                             ref={textareaRef}
                             value={value}
@@ -130,6 +130,7 @@ export function VercelV0Chat() {
                                 "focus-visible:ring-0 focus-visible:ring-offset-0",
                                 "placeholder:text-neutral-500 placeholder:text-sm",
                                 "min-h-[60px]",
+                                "rounded-xl",
                                 isLoading && "opacity-50"
                             )}
                             style={{
@@ -143,7 +144,7 @@ export function VercelV0Chat() {
                             <button
                                 type="button"
                                 disabled={isLoading}
-                                className="group p-2 hover:bg-neutral-800 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                                className="group p-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 disabled:opacity-50"
                             >
                                 <Paperclip className="w-4 h-4 text-white" />
                                 <span className="text-xs text-zinc-400 hidden group-hover:inline transition-opacity">
@@ -155,7 +156,7 @@ export function VercelV0Chat() {
                             <button
                                 type="button"
                                 disabled={isLoading}
-                                className="px-2 py-1 rounded-lg text-sm text-zinc-400 transition-colors border border-dashed border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 flex items-center justify-between gap-1 disabled:opacity-50"
+                                className="px-2 py-1 rounded-xl text-sm text-zinc-400 transition-colors border border-dashed border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 flex items-center justify-between gap-1 disabled:opacity-50"
                             >
                                 <PlusIcon className="w-4 h-4" />
                                 Project
@@ -165,7 +166,7 @@ export function VercelV0Chat() {
                                 onClick={handleSubmit}
                                 disabled={!value.trim() || isLoading}
                                 className={cn(
-                                    "px-1.5 py-1.5 rounded-lg text-sm transition-colors border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 flex items-center justify-between gap-1",
+                                    "px-1.5 py-1.5 rounded-xl text-sm transition-colors border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 flex items-center justify-between gap-1",
                                     value.trim() && !isLoading
                                         ? "bg-white text-black hover:bg-neutral-200"
                                         : "text-zinc-400",
@@ -230,7 +231,7 @@ function ActionButton({ icon, label, disabled }: ActionButtonProps) {
             type="button"
             disabled={disabled}
             className={cn(
-                "flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 rounded-full border border-neutral-800 text-neutral-400 hover:text-white transition-colors",
+                "flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 rounded-xl border border-neutral-800 text-neutral-400 hover:text-white transition-colors",
                 disabled && "opacity-50 cursor-not-allowed hover:bg-neutral-900 hover:text-neutral-400"
             )}
         >

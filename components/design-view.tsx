@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Smartphone, 
   Tablet, 
@@ -22,6 +22,18 @@ import {
   FolderOpenIcon
 } from 'lucide-react';
 
+interface LayerNode {
+  id: string;
+  tag: string;
+  className?: string;
+  children: LayerNode[];
+  expanded: boolean;
+  level: number;
+  textContent?: string;
+  type?: 'container' | 'text' | 'image' | 'input' | 'button';
+  element?: Element; // Reference to actual DOM element
+}
+
 interface DesignViewProps {
   activeFile: string;
 }
@@ -31,11 +43,15 @@ export default function DesignView({ activeFile }: DesignViewProps) {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [devicePreview, setDevicePreview] = useState<'phone' | 'tablet' | 'desktop'>('phone');
-  const [expandedFolders, setExpandedFolders] = useState<{ [key: string]: boolean }>({
-    "app/dev/Projects": true,
-    "mc1": true,
-    "components": true,
-  });
+  const [layerTree, setLayerTree] = useState<LayerNode | null>(null);
+  const [highlightBox, setHighlightBox] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
   // Add state for sidebar properties
   const [sidebarProps, setSidebarProps] = useState({
@@ -62,12 +78,20 @@ export default function DesignView({ activeFile }: DesignViewProps) {
     setZoom(100);
   };
 
-  const toggleFolder = (folder: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedFolders(prev => ({
-      ...prev,
-      [folder]: !prev[folder]
-    }));
+  const toggleLayer = (layerId: string) => {
+    setLayerTree(prevTree => {
+      if (!prevTree) return null;
+      const updateNode = (node: LayerNode): LayerNode => {
+        if (node.id === layerId) {
+          return { ...node, expanded: !node.expanded };
+        }
+        return {
+          ...node,
+          children: node.children.map(updateNode)
+        };
+      };
+      return updateNode(prevTree);
+    });
   };
 
   // Get preview dimensions based on device
@@ -88,13 +112,282 @@ export default function DesignView({ activeFile }: DesignViewProps) {
   const toolbarButtonClass = "h-full flex items-center justify-center px-2 text-gray-400 hover:text-gray-300 hover:bg-[#1a1a1a] transition-colors";
   const activeToolbarButtonClass = "h-full flex items-center justify-center px-2 text-white bg-[#1a1a1a] transition-colors";
 
+  // Function to build layer tree from DOM
+  const buildLayerTree = (element: Element, level: number = 0): LayerNode => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const tag = element.tagName.toLowerCase();
+    
+    // Get text content if it's a text-only element
+    let textContent = '';
+    if (element.childNodes.length === 1 && element.firstChild?.nodeType === Node.TEXT_NODE) {
+      textContent = element.textContent?.trim() || '';
+    }
+    
+    // Determine element type
+    let type: LayerNode['type'] = 'container';
+    if (tag === 'img') type = 'image';
+    else if (tag === 'input' || tag === 'textarea') type = 'input';
+    else if (tag === 'button') type = 'button';
+    else if (textContent) type = 'text';
+
+    return {
+      id,
+      tag,
+      className: element.className || undefined,
+      children: Array.from(element.children).map(child => buildLayerTree(child, level + 1)),
+      expanded: true,
+      level,
+      textContent: textContent || undefined,
+      type,
+      element
+    };
+  };
+
+  // Function to find layer by id
+  const findLayerById = (tree: LayerNode | null, id: string): LayerNode | null => {
+    if (!tree) return null;
+    if (tree.id === id) return tree;
+    for (const child of tree.children) {
+      const found = findLayerById(child, id);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  // Function to update highlight box position
+  const updateHighlightBox = (element: Element) => {
+    if (!previewContainerRef.current) return;
+
+    const containerRect = previewContainerRef.current.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const scale = zoom / 100;
+
+    setHighlightBox({
+      top: (elementRect.top - containerRect.top) / scale,
+      left: (elementRect.left - containerRect.left) / scale,
+      width: elementRect.width / scale,
+      height: elementRect.height / scale
+    });
+  };
+
+  // Update highlight when selection changes
+  useEffect(() => {
+    if (!selectedElement || !layerTree) {
+      setHighlightBox(null);
+      return;
+    }
+
+    const selectedLayer = findLayerById(layerTree, selectedElement);
+    if (selectedLayer?.element) {
+      updateHighlightBox(selectedLayer.element);
+    }
+  }, [selectedElement, layerTree, zoom]);
+
+  // Update layer tree when preview content changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (previewRef.current) {
+        try {
+          const tree = buildLayerTree(previewRef.current);
+          console.log('Layer tree built:', tree);
+          setLayerTree(tree);
+        } catch (error) {
+          console.error('Error building layer tree:', error);
+        }
+      }
+    }, 100); // Small delay to ensure content is rendered
+
+    return () => clearTimeout(timer);
+  }, [activeFile]);
+
+  // Get icon for layer type
+  const getLayerIcon = (layer: LayerNode) => {
+    switch (layer.type) {
+      case 'text':
+        return <Type size={16} />;
+      case 'image':
+        return <ImageIcon size={16} />;
+      case 'input':
+        return <Square size={16} />;
+      case 'button':
+        return <Square size={16} />;
+      default:
+        return <Layers size={16} />;
+    }
+  };
+
+  // Format class names for display
+  const formatClassNames = (className?: string) => {
+    if (!className) return '';
+    return className.split(' ').map(cls => `.${cls}`).join('');
+  };
+
+  // Get display name for layer
+  const getLayerDisplayName = (layer: LayerNode) => {
+    const tagName = layer.tag;
+    const classes = formatClassNames(layer.className);
+    const text = layer.textContent ? ` "${layer.textContent.substring(0, 20)}${layer.textContent.length > 20 ? '...' : ''}"` : '';
+    return `${tagName}${classes}${text}`;
+  };
+
+  // Render a single layer in the layer tree
+  const renderLayer = (layer: LayerNode) => {
+    const isSelected = selectedElement === layer.id;
+    const hasChildren = layer.children.length > 0;
+    const indent = layer.level * 12;
+    
+    return (
+      <div key={layer.id}>
+        <div 
+          className={`group flex items-center h-7 cursor-pointer border-l-2 ${
+            isSelected 
+              ? 'bg-[#2a2a2a] border-[#8cc700]' 
+              : 'hover:bg-[#1a1a1a] border-transparent'
+          }`}
+          style={{ paddingLeft: `${indent}px` }}
+          onClick={() => setSelectedElement(layer.id)}
+        >
+          {/* Expand/Collapse and Icon container */}
+          <div className="flex items-center min-w-[60px]">
+            {/* Expand/Collapse button */}
+            <div className="w-6 flex items-center justify-center">
+              {hasChildren && (
+                <button
+                  className={`w-4 h-4 flex items-center justify-center rounded ${
+                    isSelected ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLayer(layer.id);
+                  }}
+                >
+                  {layer.expanded ? (
+                    <ChevronDownIcon size={12} />
+                  ) : (
+                    <ChevronRightIcon size={12} />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Element icon */}
+            <div className={`w-6 h-6 flex items-center justify-center rounded ${
+              isSelected ? 'text-white' : 'text-gray-400'
+            }`}>
+              {layer.type === 'text' ? (
+                <Type size={14} />
+              ) : layer.type === 'image' ? (
+                <ImageIcon size={14} />
+              ) : layer.type === 'input' ? (
+                <Square size={14} />
+              ) : layer.type === 'button' ? (
+                <Square size={14} />
+              ) : (
+                <Layers size={14} />
+              )}
+            </div>
+          </div>
+
+          {/* Element name and details */}
+          <div className="flex-1 flex items-center min-w-0">
+            {/* Tag name */}
+            <span className={`font-medium text-sm ${
+              isSelected ? 'text-white' : 'text-gray-300'
+            }`}>
+              {layer.tag}
+            </span>
+
+            {/* Class names */}
+            {layer.className && (
+              <span className={`ml-1.5 text-xs truncate ${
+                isSelected ? 'text-gray-300' : 'text-gray-500'
+              }`}>
+                .{layer.className.split(' ')[0]}
+                {layer.className.split(' ').length > 1 && '...'}
+              </span>
+            )}
+
+            {/* Text content preview */}
+            {layer.textContent && (
+              <span className={`ml-2 text-xs truncate ${
+                isSelected ? 'text-gray-300' : 'text-gray-500'
+              }`}>
+                "{layer.textContent.substring(0, 20)}
+                {layer.textContent.length > 20 ? '...' : ''}"
+              </span>
+            )}
+          </div>
+
+          {/* Type badge */}
+          {layer.type && layer.type !== 'container' && (
+            <div className={`ml-2 px-2 py-0.5 text-[10px] rounded-full uppercase tracking-wider ${
+              isSelected 
+                ? 'bg-[#8cc700] text-black' 
+                : 'bg-[#1e1e1e] text-gray-400'
+            }`}>
+              {layer.type}
+            </div>
+          )}
+        </div>
+
+        {/* Children container with connection lines */}
+        {layer.expanded && hasChildren && (
+          <div className="relative">
+            <div 
+              className="absolute left-[18px] top-0 bottom-0 w-px bg-[#2a2a2a]"
+              style={{ left: `${indent + 18}px` }}
+            />
+            {layer.children.map(child => renderLayer(child))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Get preview content based on active file
+  const getPreviewContent = () => {
+    return (
+      <div className="w-full h-full bg-white">
+        <header className="w-full bg-gray-800 p-4">
+          <h1 className="text-2xl font-bold text-white">Welcome</h1>
+          <nav className="mt-2">
+            <ul className="flex space-x-4">
+              <li><a href="#" className="text-gray-300 hover:text-white">Home</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white">About</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white">Contact</a></li>
+            </ul>
+          </nav>
+        </header>
+        <main className="p-6">
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">About Us</h2>
+            <p className="text-gray-700">Welcome to our website. We're excited to share our story with you.</p>
+          </section>
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Features</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-100 rounded">
+                <h3 className="font-medium">Feature 1</h3>
+                <p className="text-sm text-gray-600">Description of feature 1</p>
+              </div>
+              <div className="p-4 bg-gray-100 rounded">
+                <h3 className="font-medium">Feature 2</h3>
+                <p className="text-sm text-gray-600">Description of feature 2</p>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  };
+
   return (
     <div className="flex-1 flex h-full flex-col overflow-hidden bg-[#0d0d0d]">
       {/* Top toolbar */}
       <div className="h-[32px] bg-[#111] border-b border-[#222] flex items-stretch z-10">
-        {/* Left section - Explorer and Components */}
+        {/* Left section - Explorer and Layers */}
         <div className="h-full px-4 flex items-center font-medium text-xs text-gray-400 border-r border-[#222]">
-          COMPONENTS
+          LAYERS
         </div>
         
         {/* Center section - Device preview and zoom controls */}
@@ -178,245 +471,65 @@ export default function DesignView({ activeFile }: DesignViewProps) {
       
       {/* Main content with sidebar and canvas */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left sidebar - Explorer */}
-        
-        
-        {/* Center section - Components and Canvas */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Components sidebar */}
-          <div className="w-[240px] border-r border-[#222] bg-[#111] flex flex-col">
-            <div className="flex-1 overflow-y-auto p-2">
-              <div className="space-y-1">
-                <div className="text-xs text-gray-500 px-2 py-1">LAYOUT</div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Layers size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">Stack</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Square size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">HStack</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Square size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">VStack</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Layers size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">ZStack</span>
-                </div>
-                
-                <div className="text-xs text-gray-500 px-2 py-1 mt-3">UI ELEMENTS</div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Type size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">Text</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Square size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">Button</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <ImageIcon size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">Image</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Square size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">TextField</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Circle size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">Toggle</span>
-                </div>
-                
-                <div className="flex items-center px-2 py-1.5 rounded hover:bg-[#222] cursor-pointer">
-                  <div className="w-5 h-5 mr-2 flex items-center justify-center text-gray-400">
-                    <Sliders size={16} />
-                  </div>
-                  <span className="text-sm text-gray-300">Slider</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Layers sidebar */}
+        <div className="w-[240px] border-r border-[#222] bg-[#111] flex flex-col">
+          {/* Layers header */}
           
-          {/* Canvas */}
-          <div className="flex-1 overflow-auto p-8 flex items-center justify-center bg-[#0d0d0d]">
-            <div 
-              className="relative bg-white rounded-lg shadow-lg overflow-hidden"
-              style={{
-                width: `${dimensions.width * zoom / 100}px`,
-                height: `${dimensions.height * zoom / 100}px`,
-                transform: `scale(${zoom / 100})`,
-                transformOrigin: 'center',
-              }}
-            >
-              {/* Grid overlay */}
-              {showGrid && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="w-full h-full" style={{
-                    backgroundImage: 'linear-gradient(to right, rgba(128, 128, 128, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(128, 128, 128, 0.1) 1px, transparent 1px)',
-                    backgroundSize: '20px 20px'
-                  }}></div>
-                </div>
-              )}
-              
-              {/* Preview content based on active file */}
-              <div className="w-full h-full">
-                {activeFile === "app.swift" && (
-                  <div className="w-full h-full bg-[#f0e6dc] flex flex-col">
-                    <div className="p-4 text-center">
-                      <h1 className="text-xl font-semibold text-white bg-black bg-opacity-50 p-2 rounded">LET'S LEARN</h1>
-                    </div>
-                  </div>
-                )}
-                
-                {activeFile === "navbar.swift" && (
-                  <div className="w-full bg-black bg-opacity-80 p-4 flex items-center justify-between">
-                    <h1 className="text-lg font-semibold text-white">Codejc</h1>
-                    <button className="text-white">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                      </svg>
-                    </button>
-                  </div>
-                )}
-                
-                {activeFile === "modal.swift" && (
-                  <div className="w-full h-full flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-4/5 max-w-md">
-                      <h2 className="text-xl font-bold text-center mb-4">Modal Title</h2>
-                      <p className="text-gray-700 mb-6 text-center">This is a modal view</p>
-                      <div className="flex justify-center">
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                          Close
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {activeFile === "inputField.swift" && (
-                  <div className="w-full h-full flex items-center justify-center p-4">
-                    <div className="w-full">
-                      <input 
-                        type="text" 
-                        placeholder="Enter text here" 
-                        className="w-full p-4 bg-gray-100 rounded-lg text-gray-800"
-                      />
-                    </div>
-                  </div>
-                )}
+          
+          {/* Layers tree */}
+          <div className="flex-1 overflow-y-auto">
+            {layerTree ? (
+              renderLayer(layerTree)
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                No layers available
               </div>
-            </div>
+            )}
           </div>
         </div>
         
-        {/* Right sidebar - Properties */}
-        <div className="w-[240px] border-l border-[#222] bg-[#111] flex flex-col">
-          <div className="flex-1 overflow-y-auto p-3">
-            <div className="space-y-4">
-              <div>
-                <div className="text-xs text-gray-500 mb-1">LAYOUT</div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Width</label>
-                    <input type="text" value={sidebarProps.width} onChange={e => setSidebarProps(p => ({ ...p, width: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Height</label>
-                    <input type="text" value={sidebarProps.height} onChange={e => setSidebarProps(p => ({ ...p, height: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Padding</label>
-                    <input type="text" value={sidebarProps.padding} onChange={e => setSidebarProps(p => ({ ...p, padding: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Margin</label>
-                    <input type="text" value={sidebarProps.margin} onChange={e => setSidebarProps(p => ({ ...p, margin: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                  </div>
+        {/* Canvas */}
+        <div className="flex-1 overflow-auto p-8 flex items-center justify-center bg-[#0d0d0d]">
+          <div 
+            ref={previewContainerRef}
+            className="relative bg-white rounded-lg shadow-lg overflow-hidden"
+            style={{
+              width: `${dimensions.width * zoom / 100}px`,
+              height: `${dimensions.height * zoom / 100}px`,
+              transform: `scale(${zoom / 100})`,
+              transformOrigin: 'center',
+            }}
+          >
+            {/* Highlight overlay */}
+            {highlightBox && (
+              <div
+                className="absolute pointer-events-none border-2 border-[#8cc700] bg-[#8cc700]/10 z-50"
+                style={{
+                  top: `${highlightBox.top}px`,
+                  left: `${highlightBox.left}px`,
+                  width: `${highlightBox.width}px`,
+                  height: `${highlightBox.height}px`,
+                }}
+              >
+                <div className="absolute top-full left-0 mt-1 bg-[#8cc700] text-black text-xs px-1 rounded">
+                  {Math.round(highlightBox.width)} × {Math.round(highlightBox.height)}
                 </div>
               </div>
-              
-              <div>
-                <div className="text-xs text-gray-500 mb-1">APPEARANCE</div>
-                <div className="space-y-2">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Background</label>
-                    <div className="flex">
-                      <div className="w-6 h-6 rounded border border-[#333] bg-[#f0e6dc] mr-2"></div>
-                      <input type="text" value={sidebarProps.background} onChange={e => setSidebarProps(p => ({ ...p, background: e.target.value }))} className="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Border Radius</label>
-                    <input type="text" value={sidebarProps.borderRadius} onChange={e => setSidebarProps(p => ({ ...p, borderRadius: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Opacity</label>
-                    <input type="range" min="0" max="100" value={sidebarProps.opacity} onChange={e => setSidebarProps(p => ({ ...p, opacity: Number(e.target.value) }))} className="w-full" />
-                  </div>
-                </div>
+            )}
+
+            {/* Grid overlay */}
+            {showGrid && (
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="w-full h-full" style={{
+                  backgroundImage: 'linear-gradient(to right, rgba(128, 128, 128, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(128, 128, 128, 0.1) 1px, transparent 1px)',
+                  backgroundSize: '20px 20px'
+                }}></div>
               </div>
-              
-              <div>
-                <div className="text-xs text-gray-500 mb-1">TEXT</div>
-                <div className="space-y-2">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Font</label>
-                    <select className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white">
-                      <option>System Font</option>
-                      <option>SF Pro</option>
-                      <option>Helvetica</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Size</label>
-                    <input type="text" value={sidebarProps.fontSize} onChange={e => setSidebarProps(p => ({ ...p, fontSize: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Weight</label>
-                    <select className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white">
-                      <option>Regular</option>
-                      <option>Medium</option>
-                      <option selected>Semibold</option>
-                      <option>Bold</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Color</label>
-                    <div className="flex">
-                      <div className="w-6 h-6 rounded border border-[#333] bg-white mr-2"></div>
-                      <input type="text" value={sidebarProps.color} onChange={e => setSidebarProps(p => ({ ...p, color: e.target.value }))} className="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            )}
+            
+            {/* Preview content */}
+            <div ref={previewRef} className="w-full h-full">
+              {getPreviewContent()}
             </div>
           </div>
         </div>

@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div className="flex-1 flex gap-4 overflow-hidden">
           {/* Left Panel: File Sidebar */}
           {sidebarOpen && (
-            <div className="flex flex-col bg-[rgba(20,20,20,0.7)] border border-[#232323] rounded-xl shadow-2xl backdrop-blur-md overflow-hidden w-[250px] transition-all duration-300">
+            <div className="flex flex-col bg-[rgba(20,20,20,0.7)] rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden w-[250px] transition-all duration-300 border border-[#1a1a1a]">
               <Sidebar 
                 files={fileContents}
                 activeFile={activeFile}
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
           )}
 
           {/* Center Panel: Editor or Design View */}
-          <div className="flex-1 flex flex-col bg-[rgba(20,20,20,0.7)] border border-[#232323] rounded-xl shadow-2xl backdrop-blur-md overflow-hidden">
+          <div className="flex-1 flex flex-col bg-[rgba(20,20,20,0.7)] rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden border border-[#1a1a1a]">
             {activeMode === 'code' ? (
               <Editor 
                 files={fileContents}
@@ -421,13 +421,22 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         {/* Right Panel: Browser Preview */}
-        <div className="w-1/3 flex flex-col bg-[rgba(20,20,20,0.7)] border border-[#232323] rounded-xl shadow-2xl backdrop-blur-md overflow-hidden">
+        <div className="w-[400px] flex flex-col bg-[rgba(20,20,20,0.7)] rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden border border-[#1a1a1a]">
           <BrowserFrame
             html={fileContents["index.html"]}
             css={fileContents["styles.css"]}
             js={fileContents["main.js"]}
           />
         </div>
+
+        {/* Version History Panel */}
+        {versionHistoryOpen && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <div className="w-[800px] h-[600px] bg-[rgba(20,20,20,0.7)] rounded-2xl shadow-2xl backdrop-blur-md overflow-hidden border border-[#1a1a1a]">
+              <VersionHistory isOpen={versionHistoryOpen} onClose={() => setVersionHistoryOpen(false)} />
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Mobile-only menu button */}

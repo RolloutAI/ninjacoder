@@ -347,7 +347,7 @@ export default function Sidebar({
 
   return (
     <div 
-      className="w-full h-full bg-[#111] border-r border-[#222] overflow-y-auto shadow-md flex flex-col"
+      className="w-full h-full bg-[#111] overflow-y-auto shadow-md flex flex-col"
       onContextMenu={(e) => handleContextMenu(e, 'empty')}
     >
       {/* EXPLORER Section */}

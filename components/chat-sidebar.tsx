@@ -98,74 +98,73 @@ export default function ChatSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
   if (!isOpen) return null;
 
   return (
-    <div className="flex flex-col bg-[rgba(20,20,20,0.7)] border-r border-[#232323] rounded-r-xl shadow-2xl backdrop-blur-md overflow-hidden w-[420px] transition-all duration-300">
+    <div className="w-[400px] h-full bg-[#111] rounded-2xl overflow-hidden flex flex-col border border-[#1a1a1a]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#232323] bg-black/20">
-        <div className="flex items-center">
-          <BotIcon size={18} className="text-[#8cc700] mr-2" />
-          <h2 className="text-white font-medium">AI Assistant</h2>
-        </div>
+      <div className="px-4 bg-[#0d0d0d] border-b border-[#222] flex items-center justify-between h-[32px]">
+        <span className="text-xs font-semibold tracking-wider text-gray-400">ASSISTANT</span>
         <button 
           onClick={onClose}
-          className="text-gray-400 hover:text-white p-1 rounded hover:bg-[#222] transition-colors"
+          className="text-gray-500 hover:text-gray-300 p-0.5 rounded hover:bg-[#222] transition-colors"
         >
-          <XIcon size={18} />
+          <XIcon size={14} />
         </button>
       </div>
-      
+  
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-scrollbar">
-        {messages.map((message) => (
-          <div 
-            key={message.id} 
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} message-animation`}
-          >
+      <div className="p-2 flex-1 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
             <div 
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.sender === 'user' 
-                  ? 'bg-[#1a1a1a] text-white' 
-                  : 'bg-[#0d3a0d] text-white'
-              }`}
+              key={message.id} 
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} message-animation`}
             >
-              <div className="flex items-center mb-1">
-                <div className="w-5 h-5 rounded-full bg-[#333] flex items-center justify-center mr-2">
-                  {message.sender === 'user' ? (
-                    <UserIcon size={12} className="text-white" />
-                  ) : (
-                    <BotIcon size={12} className="text-[#8cc700]" />
-                  )}
+              <div 
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.sender === 'user' 
+                    ? 'bg-[#1a1a1a] text-white' 
+                    : 'bg-[#0d3a0d] text-white'
+                }`}
+              >
+                <div className="flex items-center mb-1">
+                  <div className="w-5 h-5 rounded-full bg-[#333] flex items-center justify-center mr-2">
+                    {message.sender === 'user' ? (
+                      <UserIcon size={12} className="text-white" />
+                    ) : (
+                      <BotIcon size={12} className="text-[#8cc700]" />
+                    )}
+                  </div>
+                  <span className="text-xs font-medium">
+                    {message.sender === 'user' ? 'You' : 'AI Assistant'}
+                  </span>
+                  <span className="text-xs text-gray-500 ml-auto">
+                    {formatTime(message.timestamp)}
+                  </span>
                 </div>
-                <span className="text-xs font-medium">
-                  {message.sender === 'user' ? 'You' : 'AI Assistant'}
-                </span>
-                <span className="text-xs text-gray-500 ml-auto">
-                  {formatTime(message.timestamp)}
-                </span>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                
+                {/* Message actions */}
+                {message.sender === 'assistant' && (
+                  <div className="flex items-center mt-2 space-x-2 justify-end">
+                    <button className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[#222] transition-colors">
+                      <CopyIcon size={14} />
+                    </button>
+                    <button className="text-gray-500 hover:text-green-500 p-1 rounded hover:bg-[#222] transition-colors">
+                      <ThumbsUpIcon size={14} />
+                    </button>
+                    <button className="text-gray-500 hover:text-red-500 p-1 rounded hover:bg-[#222] transition-colors">
+                      <ThumbsDownIcon size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              
-              {/* Message actions */}
-              {message.sender === 'assistant' && (
-                <div className="flex items-center mt-2 space-x-2 justify-end">
-                  <button className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[#222] transition-colors">
-                    <CopyIcon size={14} />
-                  </button>
-                  <button className="text-gray-500 hover:text-green-500 p-1 rounded hover:bg-[#222] transition-colors">
-                    <ThumbsUpIcon size={14} />
-                  </button>
-                  <button className="text-gray-500 hover:text-red-500 p-1 rounded hover:bg-[#222] transition-colors">
-                    <ThumbsDownIcon size={14} />
-                  </button>
-                </div>
-              )}
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
       
       {/* Input area */}
-      <div className="p-4 border-t border-[#232323] bg-black/20">
+      <div className="p-4 border-t border-[#222] bg-[#0d0d0d]">
         <div className="relative">
           <textarea
             ref={inputRef}

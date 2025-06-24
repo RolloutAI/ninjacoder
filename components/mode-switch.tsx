@@ -16,8 +16,8 @@ export function ModeSwitch({ className, activeMode, setActiveMode }: ModeSwitchP
   return (
     <div
       className={cn(
-        "flex items-center w-auto h-[30px] p-1 rounded-xl cursor-pointer transition-all duration-300 border backdrop-blur-md shadow-sm",
-        "bg-[rgba(35,35,35,0.7)] border-[#232323]",
+        "flex items-center w-auto h-[32px] p-1 rounded-lg cursor-pointer transition-all duration-200 border shadow-sm",
+        "bg-[#1a1a1a] border-[#2a2a2a] hover:bg-[#252525]",
         className
       )}
       onClick={() => setActiveMode(isCodeMode ? 'design' : 'code')}
@@ -28,7 +28,7 @@ export function ModeSwitch({ className, activeMode, setActiveMode }: ModeSwitchP
         {/* Sliding Background */}
         <div
           className={cn(
-            "absolute top-0 left-0 w-[90px] h-full rounded-lg transition-transform duration-300 ease-in-out",
+            "absolute top-0 left-0 w-[90px] h-full rounded-md transition-transform duration-200 ease-in-out",
             isCodeMode
               ? "transform translate-x-0 bg-[#8cc700]"
               : "transform translate-x-[90px] bg-[#8cc700]"
@@ -39,13 +39,13 @@ export function ModeSwitch({ className, activeMode, setActiveMode }: ModeSwitchP
         <div className="relative z-10 flex items-center justify-center w-1/2 h-full">
           <CodeIcon 
             className={cn(
-              "w-4 h-4 mr-2 transition-colors duration-300",
+              "w-4 h-4 mr-1.5 transition-colors duration-200",
               isCodeMode ? "text-black" : "text-gray-400"
             )}
-            strokeWidth={2.5}
+            strokeWidth={2}
           />
           <span className={cn(
-            "text-xs font-semibold transition-colors duration-300",
+            "text-sm font-medium transition-colors duration-200",
             isCodeMode ? "text-black" : "text-gray-400"
           )}>
             Code
@@ -56,13 +56,13 @@ export function ModeSwitch({ className, activeMode, setActiveMode }: ModeSwitchP
         <div className="relative z-10 flex items-center justify-center w-1/2 h-full">
           <PenToolIcon 
             className={cn(
-              "w-4 h-4 mr-2 transition-colors duration-300",
+              "w-4 h-4 mr-1.5 transition-colors duration-200",
               !isCodeMode ? "text-black" : "text-gray-400"
             )} 
-            strokeWidth={2.5}
+            strokeWidth={2}
           />
            <span className={cn(
-            "text-xs font-semibold transition-colors duration-300",
+            "text-sm font-medium transition-colors duration-200",
             !isCodeMode ? "text-black" : "text-gray-400"
           )}>
             Design

@@ -128,16 +128,16 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
 
   return (
     <>
-      <div className="flex items-center h-[40px] px-4 bg-[#0a0a0a] border-b border-[#222] shadow-sm">
+      <div className="flex items-center h-[45px] px-4 bg-[#0a0a0a] border-b border-[#1a1a1a] shadow-lg">
         {/* Left section */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
           {/* Logo */}
           <button 
-            className="flex items-center h-full hover:bg-[#1a1a1a] px-2 rounded-md transition-colors mr-4"
+            className="flex items-center h-[32px] hover:bg-[#1a1a1a] px-2.5 rounded-lg transition-all duration-200 mr-2 group"
             onClick={resetAppState}
             title="Go to Main"
           >
-            <div className="w-5 h-5 mr-2 flex items-center justify-center">
+            <div className="w-5 h-5 mr-2 flex items-center justify-center transform group-hover:scale-105 transition-transform">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#8cc700" />
                 <path d="M2 17L12 22L22 17" stroke="#8cc700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -148,29 +148,29 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
           </button>
 
           {/* Project Title */}
-          <div className="flex items-center h-[30px] mr-4">
+          <div className="flex items-center h-[32px]">
             <div className="relative flex items-center">
               {isEditingTitle ? (
-                <div className="flex items-center bg-[#1a1a1a] rounded-md">
+                <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] shadow-inner">
                   <input
                     ref={titleInputRef}
                     type="text"
                     value={tempTitle}
                     onChange={(e) => setTempTitle(e.target.value)}
                     onKeyDown={handleTitleKeyDown}
-                    className="h-[30px] px-3 bg-transparent text-white text-sm focus:outline-none"
+                    className="h-[32px] px-3 bg-transparent text-white text-sm focus:outline-none w-[200px]"
                     maxLength={50}
                   />
-                  <div className="flex items-center px-2 space-x-1">
+                  <div className="flex items-center px-2 space-x-1.5">
                     <button
                       onClick={saveTitle}
-                      className="p-1 hover:bg-[#252525] rounded-md"
+                      className="p-1.5 hover:bg-[#252525] rounded-md transition-colors"
                     >
                       <CheckIcon size={14} className="text-[#8cc700]" />
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="p-1 hover:bg-[#252525] rounded-md"
+                      className="p-1.5 hover:bg-[#252525] rounded-md transition-colors"
                     >
                       <XIcon size={14} className="text-gray-400" />
                     </button>
@@ -179,7 +179,7 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
               ) : (
                 <button
                   onClick={startEditing}
-                  className="group flex items-center h-[30px] px-3 hover:bg-[#1a1a1a] rounded-md transition-colors"
+                  className="group flex items-center h-[32px] px-3 hover:bg-[#1a1a1a] rounded-lg transition-all duration-200"
                 >
                   <span className="text-white text-sm font-medium">{projectTitle}</span>
                   <PencilIcon size={14} className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -191,20 +191,20 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
           {/* Branch and Version */}
           <div className="relative" ref={versionMenuRef}>
             <button 
-              className="h-[28px] flex items-center text-xs text-[#8cc700] px-2 bg-transparent hover:bg-[#252525] transition-colors"
+              className="h-[32px] flex items-center text-xs px-3 bg-[#1a1a1a] hover:bg-[#252525] rounded-lg transition-all duration-200 border border-[#2a2a2a] shadow-sm"
               onClick={() => setShowVersionMenu(!showVersionMenu)}
             >
-              <span className="font-medium">main</span>
-              <div className="mx-1.5 h-3 w-px bg-gray-600"></div>
+              <span className="font-medium text-[#8cc700]">main</span>
+              <div className="mx-2 h-3 w-px bg-[#2a2a2a]"></div>
               <span className="text-gray-400">v4.0.14</span>
-              <ChevronDownIcon size={14} className="ml-1 text-gray-400" />
+              <ChevronDownIcon size={14} className="ml-1.5 text-gray-400" />
             </button>
             
             {showVersionMenu && (
-              <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-lg z-50 w-64">
-                <div className="p-3">
+              <div className="absolute top-full left-0 mt-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-xl z-50 w-64">
+                <div className="p-2">
                   <button 
-                    className="w-full flex items-center justify-center py-2 bg-[#252525] hover:bg-[#333] rounded-md transition-colors"
+                    className="w-full flex items-center justify-center py-2 bg-[#252525] hover:bg-[#303030] rounded-lg transition-all duration-200"
                     onClick={() => {
                       onVersionHistoryClick?.();
                       setShowVersionMenu(false);
@@ -219,43 +219,40 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
         </div>
         
         {/* Center section - Search */}
-        <div className="flex-1 flex items-center justify-center">
-          {/* Search Bar */}
-          <div className="w-96">
-            <button 
-              className="search-button w-full h-[30px] bg-[#1a1a1a] rounded-md px-3 text-xs text-gray-400 flex items-center hover:bg-[#252525] transition-all duration-300"
-              onClick={() => setShowSpotlightSearch(true)}
-            >
-              <SearchIcon size={14} className="mr-2" />
-              <span className="flex-1 text-left">Search files, commands, settings...</span>
-              <div className="flex items-center space-x-1">
-                <div className="bg-[#252525] rounded px-1.5 py-0.5 text-xs text-gray-500 flex items-center">
-                  <CommandIcon size={10} className="mr-0.5" />
-                  <span>K</span>
-                </div>
+        <div className="flex-1 flex items-center justify-center max-w-2xl mx-auto px-4">
+          <button 
+            className="search-button w-full h-[32px] bg-[#1a1a1a] hover:bg-[#252525] rounded-lg px-3 text-sm text-gray-400 flex items-center border border-[#2a2a2a] shadow-sm transition-all duration-200 group"
+            onClick={() => setShowSpotlightSearch(true)}
+          >
+            <SearchIcon size={14} className="mr-2 text-gray-500 group-hover:text-gray-400 transition-colors" />
+            <span className="flex-1 text-left">Search files, commands, settings...</span>
+            <div className="flex items-center">
+              <div className="bg-[#252525] rounded-md px-2 py-0.5 text-xs text-gray-500 flex items-center border border-[#303030]">
+                <CommandIcon size={12} className="mr-1" />
+                <span>K</span>
               </div>
-            </button>
-          </div>
+            </div>
+          </button>
         </div>
         
         {/* Right section */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <ModeSwitch activeMode={activeMode} setActiveMode={setActiveMode} />
           
           {/* AI Assistant button */}
           <button 
-            className="flex items-center h-[30px] px-4 bg-[rgba(35,35,35,0.7)] rounded-xl text-white/80 hover:bg-white/5 border border-[#232323] backdrop-blur-md shadow-sm transition-all duration-300 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8cc700]/60"
+            className="flex items-center h-[32px] px-4 bg-[#1a1a1a] hover:bg-[#252525] rounded-lg text-white/90 border border-[#2a2a2a] shadow-sm backdrop-blur-sm transition-all duration-200 text-sm font-medium group"
             onClick={toggleChatSidebar}
             title="AI Assistant"
           >
-            <BotIcon size={14} className="mr-1.5 text-[#8cc700] transition-transform duration-300 hover:rotate-12" />
-            <span className="text-xs">Assistant</span>
+            <BotIcon size={14} className="mr-1.5 text-[#8cc700] transition-transform duration-200 group-hover:rotate-12" />
+            <span>Assistant</span>
           </button>
           
           {/* Visit button */}
-          <button className="flex items-center h-[30px] px-4 bg-gradient-to-tr from-[#aaff00]/80 to-[#8cc700]/90 rounded-xl text-black font-semibold hover:from-[#aaff00]/90 hover:to-[#8cc700]/100 transition-all duration-300 transform hover:scale-[1.02] shadow-[0_2px_8px_0_rgba(140,199,0,0.15)] hover:shadow-[0_2px_16px_0_rgba(140,199,0,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8cc700]/80">
-            <ExternalLinkIcon size={14} className="mr-1.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-            <span className="text-xs">Visit</span>
+          <button className="flex items-center h-[32px] px-4 bg-gradient-to-r from-[#8cc700] to-[#aaff00] rounded-lg text-black font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] shadow-[0_2px_8px_0_rgba(140,199,0,0.15)] hover:shadow-[0_2px_12px_0_rgba(140,199,0,0.25)] group">
+            <ExternalLinkIcon size={14} className="mr-1.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+            <span className="text-sm">Visit</span>
           </button>
         </div>
       </div>
