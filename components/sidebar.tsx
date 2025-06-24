@@ -3,13 +3,25 @@ import { useState, useRef, useEffect } from "react";
 import ContextMenu from "./context-menu";
 
 interface SidebarProps {
+  files: { [key: string]: string };
   activeFile: string;
   setActiveFile: (file: string) => void;
+  openFiles: string[];
+  onCloseFile: (file: string) => void;
+  onNewItem: (item: string) => void;
   closeSidebar?: () => void;
 }
 
-export default function Sidebar({ activeFile, setActiveFile, closeSidebar }: SidebarProps) {
-  const [expandedFolders, setExpandedFolders] = useState({
+export default function Sidebar({
+  files,
+  activeFile,
+  setActiveFile,
+  openFiles,
+  onCloseFile,
+  onNewItem,
+  closeSidebar,
+}: SidebarProps) {
+  const [expandedFolders, setExpandedFolders] = useState<{ [key: string]: boolean }>({
     "app/dev/Projects": true,
     "website": true,
     "src": true,
@@ -34,7 +46,7 @@ export default function Sidebar({ activeFile, setActiveFile, closeSidebar }: Sid
   // Clipboard state
   const [clipboard, setClipboard] = useState<{
     action: 'copy' | 'cut' | null;
-    itemType: 'file' | 'folder' | null;
+    itemType: 'file' | 'folder' | 'empty' | null;
     itemName: string;
   }>({
     action: null,

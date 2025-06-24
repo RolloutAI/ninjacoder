@@ -6,10 +6,14 @@ import {
   PenToolIcon,
   SearchIcon,
   CommandIcon,
-  BotIcon
+  BotIcon,
+  PencilIcon,
+  CheckIcon,
+  XIcon
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import SpotlightSearch from "./spotlight-search";
+import { ModeSwitch } from "./mode-switch";
 
 interface TopbarProps {
   onVersionHistoryClick?: () => void;
@@ -22,8 +26,42 @@ interface TopbarProps {
 export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMode, resetAppState, toggleChatSidebar }: TopbarProps) {
   const [showVersionMenu, setShowVersionMenu] = useState(false);
   const [showSpotlightSearch, setShowSpotlightSearch] = useState(false);
+  const [projectTitle, setProjectTitle] = useState("Untitled Project");
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [tempTitle, setTempTitle] = useState(projectTitle);
   const versionMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle title edit
+  const startEditing = () => {
+    setIsEditingTitle(true);
+    setTempTitle(projectTitle);
+    setTimeout(() => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }, 100);
+  };
+
+  const saveTitle = () => {
+    if (tempTitle.trim()) {
+      setProjectTitle(tempTitle.trim());
+    }
+    setIsEditingTitle(false);
+  };
+
+  const cancelEditing = () => {
+    setTempTitle(projectTitle);
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveTitle();
+    } else if (e.key === 'Escape') {
+      cancelEditing();
+    }
+  };
 
   // Toggle between code and design modes
   const toggleCodeMode = () => {
@@ -108,6 +146,47 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
             </div>
             <span className="font-semibold text-white tracking-tight text-sm">Codejc</span>
           </button>
+
+          {/* Project Title */}
+          <div className="flex items-center h-[30px] mr-4">
+            <div className="relative flex items-center">
+              {isEditingTitle ? (
+                <div className="flex items-center bg-[#1a1a1a] rounded-md">
+                  <input
+                    ref={titleInputRef}
+                    type="text"
+                    value={tempTitle}
+                    onChange={(e) => setTempTitle(e.target.value)}
+                    onKeyDown={handleTitleKeyDown}
+                    className="h-[30px] px-3 bg-transparent text-white text-sm focus:outline-none"
+                    maxLength={50}
+                  />
+                  <div className="flex items-center px-2 space-x-1">
+                    <button
+                      onClick={saveTitle}
+                      className="p-1 hover:bg-[#252525] rounded-md"
+                    >
+                      <CheckIcon size={14} className="text-[#8cc700]" />
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="p-1 hover:bg-[#252525] rounded-md"
+                    >
+                      <XIcon size={14} className="text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={startEditing}
+                  className="group flex items-center h-[30px] px-3 hover:bg-[#1a1a1a] rounded-md transition-colors"
+                >
+                  <span className="text-white text-sm font-medium">{projectTitle}</span>
+                  <PencilIcon size={14} className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              )}
+            </div>
+          </div>
           
           {/* Branch and Version */}
           <div className="relative" ref={versionMenuRef}>
@@ -161,23 +240,11 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
         
         {/* Right section */}
         <div className="flex items-center space-x-3">
-          {/* Code Mode Toggle button */}
-          <button 
-            className={`code-mode-button flex items-center h-[30px] px-3 rounded-md text-white transition-all duration-300 transform hover:scale-105 ${
-              activeMode === 'code' 
-                ? 'bg-[#8cc700] text-black hover:bg-[#9dd700] mode-toggle-active' 
-                : 'bg-[#222] hover:bg-[#333]'
-            }`}
-            onClick={toggleCodeMode}
-            title={activeMode === 'code' ? 'Switch to Design Mode (⌘E)' : 'Switch to Code Mode (⌘E)'}
-          >
-            <CodeIcon size={14} className={`mr-1.5 transition-transform duration-300 ${activeMode === 'code' ? 'rotate-0' : '-rotate-12'}`} />
-            <span className="text-xs">{activeMode === 'code' ? 'Code Mode' : 'Code'}</span>
-          </button>
+          <ModeSwitch activeMode={activeMode} setActiveMode={setActiveMode} />
           
           {/* AI Assistant button */}
           <button 
-            className="flex items-center h-[30px] px-3 bg-[#222] rounded-md text-white hover:bg-[#333] transition-all duration-300 transform hover:scale-105"
+            className="flex items-center h-[30px] px-4 bg-[rgba(35,35,35,0.7)] rounded-xl text-white/80 hover:bg-white/5 border border-[#232323] backdrop-blur-md shadow-sm transition-all duration-300 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8cc700]/60"
             onClick={toggleChatSidebar}
             title="AI Assistant"
           >
@@ -186,7 +253,7 @@ export default function Topbar({ onVersionHistoryClick, activeMode, setActiveMod
           </button>
           
           {/* Visit button */}
-          <button className="flex items-center h-[30px] px-4 bg-[#8cc700] rounded-md text-black font-medium hover:bg-[#9dd700] transition-all duration-300 transform hover:scale-105 hover:shadow-glow">
+          <button className="flex items-center h-[30px] px-4 bg-gradient-to-tr from-[#aaff00]/80 to-[#8cc700]/90 rounded-xl text-black font-semibold hover:from-[#aaff00]/90 hover:to-[#8cc700]/100 transition-all duration-300 transform hover:scale-[1.02] shadow-[0_2px_8px_0_rgba(140,199,0,0.15)] hover:shadow-[0_2px_16px_0_rgba(140,199,0,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8cc700]/80">
             <ExternalLinkIcon size={14} className="mr-1.5 transition-transform duration-300 group-hover:translate-x-0.5" />
             <span className="text-xs">Visit</span>
           </button>

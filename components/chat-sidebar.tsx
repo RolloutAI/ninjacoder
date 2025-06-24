@@ -98,9 +98,9 @@ export default function ChatSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed left-0 top-0 h-full w-[420px] bg-[#111] border-r border-[#222] z-30 flex flex-col shadow-xl">
+    <div className="flex flex-col bg-[rgba(20,20,20,0.7)] border-r border-[#232323] rounded-r-xl shadow-2xl backdrop-blur-md overflow-hidden w-[420px] transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#222] bg-[#0d0d0d]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#232323] bg-black/20">
         <div className="flex items-center">
           <BotIcon size={18} className="text-[#8cc700] mr-2" />
           <h2 className="text-white font-medium">AI Assistant</h2>
@@ -165,7 +165,7 @@ export default function ChatSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
       </div>
       
       {/* Input area */}
-      <div className="p-4 border-t border-[#222] bg-[#0d0d0d]">
+      <div className="p-4 border-t border-[#232323] bg-black/20">
         <div className="relative">
           <textarea
             ref={inputRef}

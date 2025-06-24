@@ -281,11 +281,17 @@ export default function SpotlightSearch({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-start justify-center pt-20 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#1a1a1a] rounded-xl shadow-2xl w-full max-w-3xl border border-[#333] overflow-hidden animate-slideDown">
+    <div 
+      className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 backdrop-blur-sm animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[rgba(26,26,26,0.7)] rounded-xl shadow-2xl w-full max-w-3xl border border-[#333] overflow-hidden animate-slideDown backdrop-blur-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Search input */}
         <div className="p-4 border-b border-[#333] flex items-center">
-          <SearchIcon size={20} className="text-[#8cc700] mr-3" />
+          <SearchIcon size={20} className="text-[#8cc700] mr-4" />
           <input
             ref={searchInputRef}
             type="text"
@@ -295,88 +301,71 @@ export default function SpotlightSearch({
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <div className="bg-[#252525] rounded px-2 py-1 text-xs text-gray-500">
+          <div className="bg-[#252525] rounded-md px-2 py-1 text-xs text-gray-400">
             ESC
           </div>
         </div>
 
         {/* Results */}
-        <div
-          ref={resultsContainerRef}
-          className="max-h-[60vh] overflow-y-auto spotlight-scrollbar"
-        >
-          {Object.keys(groupedResults).length > 0 ? (
+        <div ref={resultsContainerRef} className="max-h-[50vh] overflow-y-auto p-2 custom-scrollbar">
+          {Object.entries(groupedResults).length > 0 ? (
             Object.entries(groupedResults).map(([category, results]) => (
               <div key={category} className="mb-2">
-                <div className="text-xs text-gray-500 px-4 py-2 sticky top-0 bg-[#1a1a1a] z-10">
-                  {category.toUpperCase()}
-                </div>
-                <div>
-                  {results.map((result, index) => {
-                    const isSelected = filteredResults.indexOf(result) === selectedIndex;
-                    return (
-                      <div
-                        key={result.id}
-                        ref={isSelected ? selectedItemRef : null}
-                        className={`flex items-center px-4 py-3 cursor-pointer transition-all duration-200 ${
-                          isSelected ? 'bg-[#252525]' : 'hover:bg-[#222]'
-                        }`}
-                        onClick={() => {
-                          result.action();
-                          onClose();
-                        }}
-                        style={{ animationDelay: `${index * 30}ms` }}
-                        className="animate-fadeIn"
-                      >
-                        <div className="w-8 h-8 flex items-center justify-center rounded-md bg-[#252525] mr-3 transition-transform duration-200 hover:scale-110">
-                          {result.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center">
-                            <span className="text-sm font-medium text-white truncate">
-                              {result.title}
-                            </span>
-                            {result.shortcut && (
-                              <span className="ml-2 px-2 py-0.5 bg-[#333] text-gray-400 rounded text-xs">
-                                {result.shortcut}
-                              </span>
-                            )}
-                          </div>
-                          {result.description && (
-                            <p className="text-xs text-gray-500 truncate">
-                              {result.description}
-                            </p>
-                          )}
-                        </div>
-                        <ChevronRightIcon size={16} className="text-gray-500 ml-2" />
+                <h3 className="text-xs text-gray-500 font-semibold px-3 pt-2 pb-1 uppercase tracking-wider">{category}</h3>
+                {results.map((result, index) => {
+                  const globalIndex = filteredResults.findIndex(r => r.id === result.id);
+                  const isSelected = selectedIndex === globalIndex;
+                  
+                  return (
+                    <div
+                      key={result.id}
+                      ref={isSelected ? selectedItemRef : null}
+                      className={`flex items-center p-3 rounded-lg cursor-pointer transition-all duration-150 ${
+                        isSelected ? 'bg-white/10' : 'hover:bg-white/5'
+                      }`}
+                      onClick={() => result.action()}
+                    >
+                      <div className="w-8 h-8 flex items-center justify-center mr-3 bg-white/5 rounded-md border border-white/10">
+                        {result.icon}
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="flex-1">
+                        <p className="text-white font-medium">{result.title}</p>
+                        {result.description && (
+                          <p className="text-gray-400 text-xs">{result.description}</p>
+                        )}
+                      </div>
+                      {result.shortcut && (
+                        <div className="flex items-center space-x-1">
+                          {result.shortcut.split('+').map(key => (
+                            <span key={key} className="bg-[#252525] rounded px-1.5 py-0.5 text-xs text-gray-400 border border-[#333]">
+                              {key === '⌘' ? 'Cmd' : key}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ))
           ) : (
-            <div className="py-8 text-center text-gray-500">
-              <div className="w-12 h-12 rounded-full bg-[#252525] flex items-center justify-center mx-auto mb-3">
-                <SearchIcon size={24} className="text-gray-400" />
-              </div>
+            <div className="text-center p-10 text-gray-500">
               <p>No results found for "{searchQuery}"</p>
-              <p className="text-xs mt-1">Try a different search term</p>
             </div>
           )}
         </div>
 
-        {/* Footer with tips */}
-        <div className="border-t border-[#333] p-3 bg-[#151515]">
+        {/* Footer */}
+        <div className="border-t border-[#333] p-3 bg-black/20">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
-                <span className="px-1.5 py-0.5 bg-[#252525] rounded mr-1.5">↑</span>
-                <span className="px-1.5 py-0.5 bg-[#252525] rounded mr-1.5">↓</span>
+                <span className="px-1.5 py-0.5 bg-[#252525] rounded mr-1.5 border border-[#333]">↑</span>
+                <span className="px-1.5 py-0.5 bg-[#252525] rounded mr-1.5 border border-[#333]">↓</span>
                 <span>to navigate</span>
               </div>
               <div className="flex items-center">
-                <span className="px-1.5 py-0.5 bg-[#252525] rounded mr-1.5">Enter</span>
+                <span className="px-1.5 py-0.5 bg-[#252525] rounded mr-1.5 border border-[#333]">Enter</span>
                 <span>to select</span>
               </div>
             </div>

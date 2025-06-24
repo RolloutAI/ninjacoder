@@ -229,7 +229,7 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
       </div>
       
       {/* Editor content */}
-      <div className="flex-1 overflow-auto custom-selection">
+      <div className="flex-1 overflow-auto custom-selection hide-scrollbar">
         <div className="flex min-w-full">
           {/* Line numbers */}
           <div className="bg-[#111] text-gray-500 py-2 pr-4 pl-4 select-none w-12 flex-shrink-0">
@@ -245,7 +245,7 @@ export default function Editor({ files, activeFile, setActiveFile, openFiles, on
           {/* Code content */}
           <div 
             ref={editorRef}
-            className="py-2 code-font overflow-x-auto flex-1 custom-selection"
+            className="py-2 code-font overflow-x-auto flex-1 custom-selection hide-scrollbar"
           >
             {highlightCode(files[activeFile], getFileLanguage(activeFile))}
           </div>

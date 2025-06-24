@@ -31,10 +31,23 @@ export default function DesignView({ activeFile }: DesignViewProps) {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [devicePreview, setDevicePreview] = useState<'phone' | 'tablet' | 'desktop'>('phone');
-  const [expandedFolders, setExpandedFolders] = useState({
+  const [expandedFolders, setExpandedFolders] = useState<{ [key: string]: boolean }>({
     "app/dev/Projects": true,
     "mc1": true,
     "components": true,
+  });
+
+  // Add state for sidebar properties
+  const [sidebarProps, setSidebarProps] = useState({
+    width: "100%",
+    height: "auto",
+    padding: "20",
+    margin: "0",
+    background: "#f0e6dc",
+    borderRadius: "0",
+    opacity: 100,
+    fontSize: "16",
+    color: "#FFFFFF",
   });
 
   const handleZoomIn = () => {
@@ -76,26 +89,10 @@ export default function DesignView({ activeFile }: DesignViewProps) {
   const activeToolbarButtonClass = "h-full flex items-center justify-center px-2 text-white bg-[#1a1a1a] transition-colors";
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#0d0d0d]">
+    <div className="flex-1 flex h-full flex-col overflow-hidden bg-[#0d0d0d]">
       {/* Top toolbar */}
       <div className="h-[32px] bg-[#111] border-b border-[#222] flex items-stretch z-10">
         {/* Left section - Explorer and Components */}
-        <div className="flex items-stretch border-r border-[#222]">
-          <div className="h-full px-4 flex items-center font-medium text-xs text-gray-400">
-            EXPLORER
-          </div>
-          <button className="h-full w-[32px] flex items-center justify-center text-gray-500 hover:text-gray-300 border-l border-[#222]">
-            <PlusIcon size={14} />
-          </button>
-          <button className="h-full w-[32px] flex items-center justify-center text-gray-500 hover:text-gray-300 border-l border-[#222]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="19" cy="12" r="1" />
-              <circle cx="5" cy="12" r="1" />
-            </svg>
-          </button>
-        </div>
-        
         <div className="h-full px-4 flex items-center font-medium text-xs text-gray-400 border-r border-[#222]">
           COMPONENTS
         </div>
@@ -182,180 +179,7 @@ export default function DesignView({ activeFile }: DesignViewProps) {
       {/* Main content with sidebar and canvas */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left sidebar - Explorer */}
-        <div className="w-[250px] border-r border-[#222] bg-[#111] flex flex-col">
-          <div className="flex-1 overflow-y-auto p-2">
-            {/* File Tree */}
-            <div className="explorer-item">
-              <div 
-                className={`explorer-folder ${expandedFolders["app/dev/Projects"] ? "active" : ""}`}
-                onClick={(e) => toggleFolder("app/dev/Projects", e)}
-              >
-                <div className="explorer-icon">
-                  {expandedFolders["app/dev/Projects"] ? 
-                    <ChevronDownIcon size={14} className="transform transition-transform duration-200" /> : 
-                    <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                  }
-                </div>
-                <div className="explorer-icon">
-                  {expandedFolders["app/dev/Projects"] ? 
-                    <FolderOpenIcon size={14} className="text-[#e8c07d]" /> : 
-                    <FolderIcon size={14} className="text-[#e8c07d]" />
-                  }
-                </div>
-                <span className="explorer-label text-gray-500">app/dev/Projects</span>
-              </div>
-              
-              {/* First Level Children */}
-              <div className={`explorer-children ${expandedFolders["app/dev/Projects"] ? "expanded" : ""}`}>
-                {/* mc1 Folder */}
-                <div className="explorer-item">
-                  <div 
-                    className={`explorer-folder ${expandedFolders["mc1"] ? "active" : ""}`}
-                    onClick={(e) => toggleFolder("mc1", e)}
-                  >
-                    <div className="explorer-icon">
-                      {expandedFolders["mc1"] ? 
-                        <ChevronDownIcon size={14} className="transform transition-transform duration-200" /> : 
-                        <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                      }
-                    </div>
-                    <div className="explorer-icon">
-                      {expandedFolders["mc1"] ? 
-                        <FolderOpenIcon size={14} className="text-[#e8c07d]" /> : 
-                        <FolderIcon size={14} className="text-[#e8c07d]" />
-                      }
-                    </div>
-                    <span className="explorer-label">mc1</span>
-                  </div>
-                  
-                  {/* mc1 Children */}
-                  <div className={`explorer-children ${expandedFolders["mc1"] ? "expanded" : ""}`}>
-                    {/* screens Folder */}
-                    <div className="explorer-item">
-                      <div className="explorer-folder">
-                        <div className="explorer-icon">
-                          <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                        </div>
-                        <div className="explorer-icon">
-                          <FolderIcon size={14} className="text-[#e8c07d]" />
-                        </div>
-                        <span className="explorer-label">screens</span>
-                      </div>
-                    </div>
-                    
-                    {/* components Folder */}
-                    <div className="explorer-item">
-                      <div 
-                        className={`explorer-folder ${expandedFolders["components"] ? "active" : ""}`}
-                        onClick={(e) => toggleFolder("components", e)}
-                      >
-                        <div className="explorer-icon">
-                          {expandedFolders["components"] ? 
-                            <ChevronDownIcon size={14} className="transform transition-transform duration-200" /> : 
-                            <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                          }
-                        </div>
-                        <div className="explorer-icon">
-                          {expandedFolders["components"] ? 
-                            <FolderOpenIcon size={14} className="text-[#e8c07d]" /> : 
-                            <FolderIcon size={14} className="text-[#e8c07d]" />
-                          }
-                        </div>
-                        <span className="explorer-label">components</span>
-                      </div>
-                      
-                      {/* components Children (Files) */}
-                      <div className={`explorer-children ${expandedFolders["components"] ? "expanded" : ""}`}>
-                        {/* app.swift */}
-                        <div className={`explorer-file ${activeFile === "app.swift" ? "active" : ""}`}>
-                          <div className="explorer-icon">
-                            <div className={`file-indicator ${activeFile === "app.swift" ? "active" : ""}`}></div>
-                          </div>
-                          <div className="explorer-icon">
-                            <FileIcon size={14} className="text-[#61afef]" />
-                          </div>
-                          <span className="explorer-label">app.swift</span>
-                        </div>
-                        
-                        {/* navbar.swift */}
-                        <div className={`explorer-file ${activeFile === "navbar.swift" ? "active" : ""}`}>
-                          <div className="explorer-icon">
-                            <div className={`file-indicator ${activeFile === "navbar.swift" ? "active" : ""}`}></div>
-                          </div>
-                          <div className="explorer-icon">
-                            <FileIcon size={14} className="text-[#61afef]" />
-                          </div>
-                          <span className="explorer-label">navbar.swift</span>
-                        </div>
-                        
-                        {/* modal.swift */}
-                        <div className={`explorer-file ${activeFile === "modal.swift" ? "active" : ""}`}>
-                          <div className="explorer-icon">
-                            <div className={`file-indicator ${activeFile === "modal.swift" ? "active" : ""}`}></div>
-                          </div>
-                          <div className="explorer-icon">
-                            <FileIcon size={14} className="text-[#61afef]" />
-                          </div>
-                          <span className="explorer-label">modal.swift</span>
-                        </div>
-                        
-                        {/* inputField.swift */}
-                        <div className={`explorer-file ${activeFile === "inputField.swift" ? "active" : ""}`}>
-                          <div className="explorer-icon">
-                            <div className={`file-indicator ${activeFile === "inputField.swift" ? "active" : ""}`}></div>
-                          </div>
-                          <div className="explorer-icon">
-                            <FileIcon size={14} className="text-[#61afef]" />
-                          </div>
-                          <span className="explorer-label">inputField.swift</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* assets Folder */}
-                    <div className="explorer-item">
-                      <div className="explorer-folder">
-                        <div className="explorer-icon">
-                          <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                        </div>
-                        <div className="explorer-icon">
-                          <FolderIcon size={14} className="text-[#e8c07d]" />
-                        </div>
-                        <span className="explorer-label">assets</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* mc2 Folder */}
-                <div className="explorer-item">
-                  <div className="explorer-folder">
-                    <div className="explorer-icon">
-                      <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                    </div>
-                    <div className="explorer-icon">
-                      <FolderIcon size={14} className="text-[#e8c07d]" />
-                    </div>
-                    <span className="explorer-label">mc2</span>
-                  </div>
-                </div>
-                
-                {/* mc3 Folder */}
-                <div className="explorer-item">
-                  <div className="explorer-folder">
-                    <div className="explorer-icon">
-                      <ChevronRightIcon size={14} className="transform transition-transform duration-200" />
-                    </div>
-                    <div className="explorer-icon">
-                      <FolderIcon size={14} className="text-[#e8c07d]" />
-                    </div>
-                    <span className="explorer-label">mc3</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
         
         {/* Center section - Components and Canvas */}
         <div className="flex flex-1 overflow-hidden">
@@ -522,19 +346,19 @@ export default function DesignView({ activeFile }: DesignViewProps) {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Width</label>
-                    <input type="text" value="100%" className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                    <input type="text" value={sidebarProps.width} onChange={e => setSidebarProps(p => ({ ...p, width: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Height</label>
-                    <input type="text" value="auto" className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                    <input type="text" value={sidebarProps.height} onChange={e => setSidebarProps(p => ({ ...p, height: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Padding</label>
-                    <input type="text" value="20" className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                    <input type="text" value={sidebarProps.padding} onChange={e => setSidebarProps(p => ({ ...p, padding: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Margin</label>
-                    <input type="text" value="0" className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                    <input type="text" value={sidebarProps.margin} onChange={e => setSidebarProps(p => ({ ...p, margin: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                   </div>
                 </div>
               </div>
@@ -546,16 +370,16 @@ export default function DesignView({ activeFile }: DesignViewProps) {
                     <label className="text-xs text-gray-400 block mb-1">Background</label>
                     <div className="flex">
                       <div className="w-6 h-6 rounded border border-[#333] bg-[#f0e6dc] mr-2"></div>
-                      <input type="text" value="#f0e6dc" className="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                      <input type="text" value={sidebarProps.background} onChange={e => setSidebarProps(p => ({ ...p, background: e.target.value }))} className="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                     </div>
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Border Radius</label>
-                    <input type="text" value="0" className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                    <input type="text" value={sidebarProps.borderRadius} onChange={e => setSidebarProps(p => ({ ...p, borderRadius: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Opacity</label>
-                    <input type="range" min="0" max="100" value="100" className="w-full" />
+                    <input type="range" min="0" max="100" value={sidebarProps.opacity} onChange={e => setSidebarProps(p => ({ ...p, opacity: Number(e.target.value) }))} className="w-full" />
                   </div>
                 </div>
               </div>
@@ -573,7 +397,7 @@ export default function DesignView({ activeFile }: DesignViewProps) {
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Size</label>
-                    <input type="text" value="16" className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                    <input type="text" value={sidebarProps.fontSize} onChange={e => setSidebarProps(p => ({ ...p, fontSize: e.target.value }))} className="w-full bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Weight</label>
@@ -588,7 +412,7 @@ export default function DesignView({ activeFile }: DesignViewProps) {
                     <label className="text-xs text-gray-400 block mb-1">Color</label>
                     <div className="flex">
                       <div className="w-6 h-6 rounded border border-[#333] bg-white mr-2"></div>
-                      <input type="text" value="#FFFFFF" className="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
+                      <input type="text" value={sidebarProps.color} onChange={e => setSidebarProps(p => ({ ...p, color: e.target.value }))} className="flex-1 bg-[#222] border border-[#333] rounded px-2 py-1 text-xs text-white" />
                     </div>
                   </div>
                 </div>
