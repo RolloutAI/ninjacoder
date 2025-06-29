@@ -14,7 +14,10 @@ import {
     ArrowUpIcon,
     Paperclip,
     PlusIcon,
+    XIcon,
+    Loader2,
 } from "lucide-react";
+import { useDropzone } from "react-dropzone";
 
 interface UseAutoResizeTextareaProps {
     minHeight: number;
@@ -75,27 +78,75 @@ function useAutoResizeTextarea({
 export function VercelV0Chat() {
     const [value, setValue] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [files, setFiles] = useState<any[]>([]);
     const router = useRouter();
+    const submissionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { textareaRef, adjustHeight } = useAutoResizeTextarea({
         minHeight: 60,
         maxHeight: 200,
     });
 
+    const onDrop = useCallback((acceptedFiles: any) => {
+        const newFiles = acceptedFiles.map((file: any) =>
+            Object.assign(file, {
+                preview: URL.createObjectURL(file),
+                progress: 0,
+            })
+        );
+        setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+
+        newFiles.forEach((file: any) => {
+            const interval = setInterval(() => {
+                setFiles((prevFiles) =>
+                    prevFiles.map((prevFile) => {
+                        if (prevFile.name === file.name) {
+                            const newProgress = prevFile.progress + 10;
+                            if (newProgress >= 100) {
+                                clearInterval(interval);
+                                return { ...prevFile, progress: 100 };
+                            }
+                            return { ...prevFile, progress: newProgress };
+                        }
+                        return prevFile;
+                    })
+                );
+            }, 200);
+        });
+    }, []);
+
+    const { getRootProps, getInputProps, open } = useDropzone({
+        onDrop,
+        noClick: true,
+        noKeyboard: true,
+        accept: { "image/*": [] },
+    });
+
+    const removeFile = (fileName: string) => {
+        setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    };
+
     const handleSubmit = async () => {
-        if (!value.trim() || isLoading) return;
-        
+        if ((!value.trim() && files.length === 0) || isLoading) return;
+
         setIsLoading(true);
-        // Here you could add a delay or API call before redirecting
-        setTimeout(() => {
+        submissionTimeoutRef.current = setTimeout(() => {
             router.push('/editor');
             setIsLoading(false);
-        }, 1000);
+        }, 3000);
+    };
+
+    const handleCancel = () => {
+        if (submissionTimeoutRef.current) {
+            clearTimeout(submissionTimeoutRef.current);
+            submissionTimeoutRef.current = null;
+        }
+        setIsLoading(false);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            if (value.trim()) {
+            if (value.trim() || files.length > 0) {
                 handleSubmit();
             }
         }
@@ -107,9 +158,39 @@ export function VercelV0Chat() {
                 What can I help you ship?
             </h1>
 
-            <div className="w-full">
+            <div className="w-full" {...getRootProps()}>
+                <input {...getInputProps()} />
                 <div className="relative bg-neutral-900 rounded-xl border border-neutral-800">
                     <div className="overflow-y-auto rounded-xl">
+                        {files.length > 0 && (
+                            <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {files.map((file) => (
+                                    <div key={file.name} className="relative group">
+                                        <img
+                                            src={file.preview}
+                                            alt={file.name}
+                                            className="w-full h-24 object-cover rounded-lg"
+                                        />
+                                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => removeFile(file.name)}
+                                                className="text-white p-1 bg-red-500 rounded-full"
+                                            >
+                                                <XIcon className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        {file.progress < 100 && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-700 rounded-b-lg">
+                                                <div
+                                                    className="h-1 bg-green-500 rounded-b-lg"
+                                                    style={{ width: `${file.progress}%` }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         <Textarea
                             ref={textareaRef}
                             value={value}
@@ -143,6 +224,7 @@ export function VercelV0Chat() {
                         <div className="flex items-center gap-2">
                             <button
                                 type="button"
+                                onClick={open}
                                 disabled={isLoading}
                                 className="group p-2 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-1 disabled:opacity-50"
                             >
@@ -163,25 +245,36 @@ export function VercelV0Chat() {
                             </button>
                             <button
                                 type="button"
-                                onClick={handleSubmit}
-                                disabled={!value.trim() || isLoading}
+                                onClick={isLoading ? handleCancel : handleSubmit}
+                                disabled={(!value.trim() && files.length === 0) && !isLoading}
                                 className={cn(
-                                    "px-1.5 py-1.5 rounded-xl text-sm transition-colors border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800 flex items-center justify-between gap-1",
-                                    value.trim() && !isLoading
+                                    "px-3 py-1.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2",
+                                    isLoading
+                                        ? "bg-red-500 text-white hover:bg-red-600"
+                                        : (value.trim() || files.length > 0)
                                         ? "bg-white text-black hover:bg-neutral-200"
-                                        : "text-zinc-400",
-                                    isLoading && "opacity-50 cursor-not-allowed"
+                                        : "text-zinc-400 border border-zinc-700",
+                                    ((!value.trim() && files.length === 0) && !isLoading) && "opacity-50 cursor-not-allowed"
                                 )}
                             >
-                                <ArrowUpIcon
-                                    className={cn(
-                                        "w-4 h-4",
-                                        value.trim() && !isLoading
-                                            ? "text-black"
-                                            : "text-zinc-400"
-                                    )}
-                                />
-                                <span className="sr-only">Send</span>
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Cancel</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ArrowUpIcon
+                                            className={cn(
+                                                "w-4 h-4",
+                                                (value.trim() || files.length > 0) && !isLoading
+                                                    ? "text-black"
+                                                    : "text-zinc-400"
+                                            )}
+                                        />
+                                    </>
+                                )}
+                                <span className="sr-only">{isLoading ? "Cancel submission" : "Send"}</span>
                             </button>
                         </div>
                     </div>
